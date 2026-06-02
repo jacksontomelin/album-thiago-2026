@@ -625,7 +625,7 @@ function SelfieScreen({ onDone }) {
   };
 
   const confirm = () => {
-    if (photo) localStorage.setItem("thiago_selfie", photo);
+    auditLog("Selfie tirada"); if (photo) localStorage.setItem("thiago_selfie", photo);
     onDone(photo);
   };
 
@@ -740,6 +740,109 @@ function SelfieScreen({ onDone }) {
 }
 
 // ─── TELA DE SELFIE ──────────────────────────────────────────────────────────
+// ─── AUDITORIA ────────────────────────────────────────────────────────────────
+const AUDIT_KEY = "copa2026_audit_logs";
+const ALBUM_NAME = "THIAGO";
+
+function auditLog(action) {
+  try {
+    const logs = JSON.parse(localStorage.getItem(AUDIT_KEY) || "[]");
+    logs.push({ album: ALBUM_NAME, action, ts: new Date().toISOString() });
+    if (logs.length > 500) logs.splice(0, logs.length - 500);
+    localStorage.setItem(AUDIT_KEY, JSON.stringify(logs));
+  } catch {}
+}
+
+function AuditPanel({ onClose }) {
+  const [logs, setLogs]     = useState([]);
+  const [filter, setFilter] = useState("TODOS");
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    try { setLogs([...JSON.parse(localStorage.getItem(AUDIT_KEY)||"[]")].reverse()); }
+    catch { setLogs([]); }
+  }, []);
+
+  const albums   = ["TODOS", ...new Set(logs.map(l => l.album))];
+  const filtered = filter === "TODOS" ? logs : logs.filter(l => l.album === filter);
+  const counts   = {};
+  logs.forEach(l => { counts[l.album] = (counts[l.album]||0)+1; });
+
+  const fmt = iso => {
+    const d = new Date(iso);
+    return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+  };
+  const icon = a => a.includes("Login")?"🔑":a.includes("Reset")?"🗑️":a.includes("Selfie")?"📸":a.includes("colada")?"⭐":"📋";
+  const color = a => a==="NICOLAS"?"#009C3B":a==="THIAGO"?"#D7141A":a==="MARCO"?"#F6A800":"#888";
+
+  const exportLog = () => {
+    const lines = ["📊 AUDITORIA ÁLBUM COPA 2026","─".repeat(30),""];
+    filtered.forEach(l => lines.push(`${fmt(l.ts)} | ${l.album} | ${l.action}`));
+    lines.push("",`Total: ${filtered.length} registros`);
+    navigator.clipboard.writeText(lines.join("\n")).then(() => { setCopied(true); setTimeout(()=>setCopied(false),2000); });
+  };
+
+  return (
+    <div style={{position:"fixed",inset:0,zIndex:900,background:"rgba(0,0,0,0.92)",display:"flex",flexDirection:"column"}}>
+      {/* Header */}
+      <div style={{background:"linear-gradient(135deg,#1B3A6B,#0a5c2e)",padding:"16px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+        <div>
+          <div style={{fontSize:18,color:"#FFE066",fontFamily:"'Fredoka One',cursive"}}>📊 Auditoria</div>
+          <div style={{fontSize:11,color:"rgba(255,255,255,0.6)",fontFamily:"'Nunito',sans-serif"}}>Copa 2026 — {logs.length} registros</div>
+        </div>
+        <button onClick={onClose} style={{background:"rgba(255,255,255,0.15)",border:"none",borderRadius:10,padding:"8px 14px",color:"#fff",fontSize:16,cursor:"pointer"}}>✕</button>
+      </div>
+
+      {/* Stats */}
+      <div style={{display:"flex",gap:8,padding:"10px 16px",background:"#111",overflowX:"auto",flexShrink:0}}>
+        {Object.entries(counts).map(([album,cnt]) => (
+          <div key={album} style={{background:"rgba(255,255,255,0.08)",borderRadius:10,padding:"6px 14px",textAlign:"center",flexShrink:0,borderTop:`3px solid ${color(album)}`}}>
+            <div style={{fontSize:20,color:"#FFE066",fontFamily:"'Fredoka One',cursive"}}>{cnt}</div>
+            <div style={{fontSize:10,color:"rgba(255,255,255,0.6)",fontFamily:"'Nunito',sans-serif"}}>{album}</div>
+          </div>
+        ))}
+        {logs.length===0 && <div style={{fontSize:12,color:"rgba(255,255,255,0.35)",fontFamily:"'Nunito',sans-serif",padding:"10px 0"}}>Nenhum registro ainda</div>}
+      </div>
+
+      {/* Filters */}
+      <div style={{display:"flex",gap:6,padding:"8px 16px",background:"#0a0a0a",overflowX:"auto",flexShrink:0}}>
+        {albums.map(a => (
+          <button key={a} onClick={()=>setFilter(a)} style={{
+            padding:"5px 14px",borderRadius:20,border:"none",cursor:"pointer",flexShrink:0,
+            background:filter===a?"#F6A800":"rgba(255,255,255,0.1)",
+            color:filter===a?"#1B3A6B":"#fff",fontSize:11,fontFamily:"'Fredoka One',cursive",
+          }}>{a}</button>
+        ))}
+      </div>
+
+      {/* Logs */}
+      <div style={{flex:1,overflowY:"auto",padding:"8px 16px",display:"flex",flexDirection:"column",gap:6}}>
+        {filtered.length===0 && <div style={{textAlign:"center",color:"rgba(255,255,255,0.3)",fontFamily:"'Nunito',sans-serif",fontSize:12,marginTop:40}}>Nenhum registro</div>}
+        {filtered.map((log,i) => (
+          <div key={i} style={{background:"rgba(255,255,255,0.06)",borderRadius:12,padding:"10px 14px",borderLeft:`3px solid ${color(log.album)}`,display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:18,flexShrink:0}}>{icon(log.action)}</span>
+            <div style={{flex:1}}>
+              <div style={{fontSize:12,color:"#fff",fontFamily:"'Fredoka One',cursive"}}>{log.album} — {log.action}</div>
+              <div style={{fontSize:10,color:"rgba(255,255,255,0.45)",fontFamily:"'Nunito',sans-serif"}}>{fmt(log.ts)}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Footer */}
+      <div style={{display:"flex",gap:8,padding:"12px 16px",background:"#111",flexShrink:0}}>
+        <button onClick={exportLog} style={{flex:1,padding:"11px",background:"linear-gradient(135deg,#F6A800,#FFE066)",border:"none",borderRadius:14,fontSize:13,fontFamily:"'Fredoka One',cursive",color:"#1B3A6B",cursor:"pointer"}}>
+          {copied?"✅ Copiado!":"📋 Copiar relatório"}
+        </button>
+        <button onClick={()=>{if(confirm("Apagar todos os logs?")){localStorage.removeItem(AUDIT_KEY);setLogs([]);}}} 
+          style={{padding:"11px 16px",background:"rgba(255,80,80,0.15)",border:"1px solid rgba(255,80,80,0.3)",borderRadius:14,fontSize:13,color:"#ff6060",cursor:"pointer",fontFamily:"'Fredoka One',cursive"}}>
+          🗑️
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── TELA DE SENHA ───────────────────────────────────────────────────────────
 const CORRECT_PIN = "24012014"; // 24/01/2014 — senha do Thiago
 const ADMIN_PIN   = "99824361"; // senha do papai Jackson para resetar
@@ -760,12 +863,12 @@ function PinScreen({ onUnlock }) {
       if (entered === CORRECT_PIN) {
         setSuccess(true);
         speak("Yeeees! É o Thih! Pode entrar, campeão! Bora colar figurinha!");
-        setTimeout(() => onUnlock("normal"), 2200);
+        auditLog("Login — Senha correta"); setTimeout(() => onUnlock("normal"), 2200);
       } else if (entered === ADMIN_PIN) {
         setSuccess(true);
         setAdminReset(true);
         speak("Olá papai Jackson! Sistema sendo zerado agora! Foto, figurinhas e trocas apagadas com sucesso!");
-        setTimeout(() => onUnlock("reset"), 2500);
+        auditLog("Reset — Senha do papai"); setTimeout(() => onUnlock("reset"), 2500);
       } else {
         setShake(true);
         const wrongMsg = "Hmm, não é essa! Tenta de novo, Thih! Dica: é a data do seu aniversário!";
@@ -1339,6 +1442,7 @@ export default function App() {
   const [muted, setMuted]           = useState(false);
   const [splash, setSplash]         = useState(true);
   const [locked, setLocked]         = useState(true);
+  const [showAudit, setShowAudit]   = useState(false);
   const [selfie, setSelfie]         = useState(false);
   const [selfiePhoto, setSelfiePhoto] = useState(() => localStorage.getItem("thiago_selfie") || null);
 
@@ -1467,6 +1571,22 @@ export default function App() {
           setSelfie(true);
         }
       }}/>}
+      {showAudit && <AuditPanel onClose={()=>setShowAudit(false)}/>}
+
+      {/* Audit button — bottom left, always visible after unlock */}
+      {!locked && !selfie && (
+        <div onClick={()=>setShowAudit(true)} style={{
+          position:"fixed",bottom:90,left:16,zIndex:500,
+          width:42,height:42,borderRadius:12,
+          background:"rgba(27,58,107,0.85)",
+          border:"1.5px solid rgba(255,255,255,0.2)",
+          display:"flex",alignItems:"center",justifyContent:"center",
+          fontSize:18,cursor:"pointer",
+          backdropFilter:"blur(8px)",
+          boxShadow:"0 2px 12px rgba(0,0,0,0.3)",
+        }}>📊</div>
+      )}
+
       {!locked && selfie && <SelfieScreen onDone={(p)=>{ if(p) setSelfiePhoto(p); setSelfie(false); }}/>}
 
       {/* SPLASH WELCOME SCREEN */}
