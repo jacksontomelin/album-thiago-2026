@@ -280,6 +280,9 @@ const TEAMS = [
   { code:"MLI", name:"Mali",            flag:"🇲🇱", color:"#14B53A" },
   { code:"ALG", name:"Argélia",         flag:"🇩🇿", color:"#006233" },
   { code:"PER", name:"Peru",            flag:"🇵🇪", color:"#D91023" },
+  { code:"IRQ", name:"Iraque",          flag:"🇮🇶", color:"#007A3D" },
+  { code:"UZB", name:"Uzbequistão",     flag:"🇺🇿", color:"#1EB53A" },
+  { code:"COD", name:"Congo RD",        flag:"🇨🇩", color:"#007FFF" },
 ];
 
 const PLAYER_DATA = {
@@ -332,6 +335,9 @@ const PLAYER_DATA = {
   MLI:["Team Logo★","Djigui Diarra","Moussa Sissako","Mamadou Fofana","Boubacar Kouyaté","Hamari Traoré","Lassana Coulibaly","Mohamed Camara","Adama Noss Traoré","Yves Bissouma","Amadou Haidara","Moussa Marega","Foto Time","Ibrahim Koné","El Bilal Touré","Sékou Koïta","Lassine Sinayoko","Abdoulay Diaby","Cheick Doucouré","Adama Traoré"],
   ALG:["Team Logo★","Raïs M'Bolhi","Rami Bensebaini","Djamel Benlamri","Youcef Atal","Mehdi Zeffane","Houssem Aouar","Ismaël Bennacer","Adlène Guedioura","Samir Beloufa","Riyad Mahrez","Sofiane Feghouli","Foto Time","Andy Delort","Islam Slimani","Yacine Brahimi","Baghdad Bounedjah","Nabil Bentaleb","Mehdi Abeid","Adam Zorgane"],
   PER:["Team Logo★","Pedro Gallese","Luis Advíncula","Alexander Callens","Carlos Zambrano","Miguel Trauco","Renato Tapia","Sergio Peña","Yoshimar Yotún","Christofer Gonzales","André Carrillo","Gianluca Lapadula","Foto Time","Edison Flores","Luis Ibérico","Bryan Reyna","Santiago Ormeño","Paolo Guerrero","Raúl Ruidíaz","Alex Valera"],
+  IRQ:["Team Logo★","Mohammed Hamid","Ali Adnan","Saman Naseri","Rebin Sulaka","Amjad Attwan","Alaa Abbas","Safaa Hadi","Bashar Resan","Humam Tariq","Mohanad Ali","Foto Time","Aymen Hussein","Moatasem Khaldoon","Ahmed Yasin","Ibrahim Bayesh","Karrar Jassim","Aws Jabbar","Mazin Al-Ubaydi","Ammar Al-Hamidi"],
+  UZB:["Team Logo★","Otabek Shukurov","Dostonbek Khamdamov","Dilshod Narzullayev","Jasur Yakhshiboev","Shamsiddin Mirzo","Jaloliddin Masharipov","Eldor Shomurodov","Otabek Suyunov","Azizbek Turgunboev","Foto Time","Abbosbek Fayzullayev","Khojiakbar Alijonov","Khamza Kamalov","Nodir Tursunov","Sanjar Tursunov","Temur Musaev","Bahodir Suyunov","Mirzo Akhmedov","Jasurbek Yakhshiboev"],
+  COD:["Team Logo★","Lionel Mpasi","Yannick Bolasie","Arthur Masuaku","Chancel Mbemba","Dominique Badibanga","Merveille Bokadi","Dieumerci Mbokani","Theo Bongonda","Rezky Wungkay","Foto Time","Yannick Ferreira-Carrasco","Silas Wissa","Cédric Bakambu","Jonathan Bolingi","Machema Meschak","Ngonda Muzinga","Isaie Dié","Britt Assombalonga","Faïz Selemani"],
 };
 
 function buildTeamStickers(code) {
@@ -588,7 +594,7 @@ function SelfieScreen({ onDone }) {
   };
 
   const confirm = () => {
-    if (photo) localStorage.setItem("nico_selfie", photo);
+    if (photo) localStorage.setItem("thiago_selfie", photo);
     onDone(photo);
   };
 
@@ -1285,7 +1291,14 @@ function FaltamTab({ collected, onToggle }) {
 
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const [collected, setCollected]   = useState({});
+  const [collected, setCollected]   = useState(() => {
+    // Pre-populate: all stickers collected except the ones still missing
+    const missing = new Set(["FWC3","CZE1","CZE19","CZE20","BIH2","BIH3","BIH6","BIH7","AUS3","AUS13","CIV14","TUN1","TUN8","TUN13","URU6","URU10","FRA5","FRA13","IRQ4","IRQ5","IRQ6","IRQ10","IRQ15","IRQ16","ARG12","COD1","COD19","UZB4","UZB6","UZB15","ENG20","REGU","BRON","PRAT","OURO","CC1","CC9","CC10","CC11","CC12","CC14"]);
+    // We build the initial state after ALL_STICKERS is defined, so use localStorage with fallback
+    const saved = localStorage.getItem("thiago_collected");
+    if (saved) return JSON.parse(saved);
+    return {};
+  });
   const [trades, setTrades]         = useState([]);
   const [tab, setTab]               = useState("album");
   const [albumView, setAlbumView]   = useState("home");
@@ -1296,13 +1309,26 @@ export default function App() {
   const [splash, setSplash]         = useState(true);
   const [locked, setLocked]         = useState(true);
   const [selfie, setSelfie]         = useState(false);
-  const [selfiePhoto, setSelfiePhoto] = useState(() => localStorage.getItem("nico_selfie") || null);
+  const [selfiePhoto, setSelfiePhoto] = useState(() => localStorage.getItem("thiago_selfie") || null);
 
   const say = (text) => {
     setMascotMsg(text);
     speechEnabled = !muted;
     speak(text);
   };
+
+  // Initialize collected state on first load — mark all as collected except missing ones
+  useEffect(() => {
+    const saved = localStorage.getItem("thiago_collected");
+    if (!saved || Object.keys(JSON.parse(saved)).length === 0) {
+      const missing = new Set(["FWC3","CZE1","CZE19","CZE20","BIH2","BIH3","BIH6","BIH7","AUS3","AUS13","CIV14","TUN1","TUN8","TUN13","URU6","URU10","FRA5","FRA13","IRQ4","IRQ5","IRQ6","IRQ10","IRQ15","IRQ16","ARG12","COD1","COD19","UZB4","UZB6","UZB15","ENG20","REGU","BRON","PRAT","OURO","CC1","CC9","CC10","CC11","CC12","CC14"]);
+      const init = {};
+      ALL_STICKERS.forEach(s => { if (!missing.has(s.id)) init[s.id] = true; });
+      setCollected(init);
+      localStorage.setItem("thiago_collected", JSON.stringify(init));
+    }
+  // eslint-disable-next-line
+  }, []);
 
   // Dismiss splash + say welcome (needs user gesture for audio)
   const dismissSplash = () => {
@@ -1397,7 +1423,7 @@ export default function App() {
         setLocked(false);
         if (mode === "reset") {
           // Reset everything
-          localStorage.removeItem("nico_selfie");
+          localStorage.removeItem("thiago_selfie");
           setCollected({});
           setTrades([]);
           setSelfiePhoto(null);
