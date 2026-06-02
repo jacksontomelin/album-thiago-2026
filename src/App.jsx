@@ -753,14 +753,40 @@ function auditLog(action) {
   } catch {}
 }
 
+// Online presence — updates every 30s
+function updatePresence() {
+  try {
+    const presence = JSON.parse(localStorage.getItem("copa2026_presence") || "{}");
+    presence[ALBUM_NAME] = new Date().toISOString();
+    localStorage.setItem("copa2026_presence", JSON.stringify(presence));
+  } catch {}
+}
+
+function getOnlineStatus() {
+  try {
+    const presence = JSON.parse(localStorage.getItem("copa2026_presence") || "{}");
+    const now = Date.now();
+    const online = {};
+    Object.entries(presence).forEach(([album, ts]) => {
+      online[album] = (now - new Date(ts).getTime()) < 5 * 60 * 1000; // 5 min
+    });
+    return online;
+  } catch { return {}; }
+}
+
 function AuditPanel({ onClose }) {
-  const [logs, setLogs]     = useState([]);
-  const [filter, setFilter] = useState("TODOS");
-  const [copied, setCopied] = useState(false);
+  const [logs, setLogs]         = useState([]);
+  const [filter, setFilter]     = useState("TODOS");
+  const [copied, setCopied]     = useState(false);
+  const [onlineStatus, setOnlineStatus] = useState({});
 
   useEffect(() => {
     try { setLogs([...JSON.parse(localStorage.getItem(AUDIT_KEY)||"[]")].reverse()); }
     catch { setLogs([]); }
+    setOnlineStatus(getOnlineStatus());
+    // Refresh online status every 30s
+    const iv = setInterval(() => setOnlineStatus(getOnlineStatus()), 30000);
+    return () => clearInterval(iv);
   }, []);
 
   const albums   = ["TODOS", ...new Set(logs.map(l => l.album))];
@@ -793,16 +819,22 @@ function AuditPanel({ onClose }) {
         <button onClick={onClose} style={{background:"rgba(255,255,255,0.15)",border:"none",borderRadius:10,padding:"8px 14px",color:"#fff",fontSize:16,cursor:"pointer"}}>✕</button>
       </div>
 
-      {/* Stats */}
+      {/* Stats + Online */}
       <div style={{display:"flex",gap:8,padding:"10px 16px",background:"#111",overflowX:"auto",flexShrink:0}}>
-        {Object.entries(counts).map(([album,cnt]) => (
-          <div key={album} style={{background:"rgba(255,255,255,0.08)",borderRadius:10,padding:"6px 14px",textAlign:"center",flexShrink:0,borderTop:`3px solid ${color(album)}`}}>
-            <div style={{fontSize:20,color:"#FFE066",fontFamily:"'Fredoka One',cursive"}}>{cnt}</div>
-            <div style={{fontSize:10,color:"rgba(255,255,255,0.6)",fontFamily:"'Nunito',sans-serif"}}>{album}</div>
-          </div>
-        ))}
+        {Object.entries(counts).map(([album,cnt]) => {
+          const isOnline = onlineStatus[album];
+          return (
+            <div key={album} style={{background:"rgba(255,255,255,0.08)",borderRadius:10,padding:"6px 14px",textAlign:"center",flexShrink:0,borderTop:`3px solid ${color(album)}`,position:"relative",minWidth:70}}>
+              <div style={{position:"absolute",top:5,right:5,width:9,height:9,borderRadius:"50%",background:isOnline?"#00e676":"#444",boxShadow:isOnline?"0 0 6px #00e676":"none"}}/>
+              <div style={{fontSize:20,color:"#FFE066",fontFamily:"'Fredoka One',cursive"}}>{cnt}</div>
+              <div style={{fontSize:10,color:"rgba(255,255,255,0.6)",fontFamily:"'Nunito',sans-serif"}}>{album}</div>
+              <div style={{fontSize:9,color:isOnline?"#00e676":"rgba(255,255,255,0.3)",fontFamily:"'Nunito',sans-serif",marginTop:2}}>{isOnline?"● online":"○ offline"}</div>
+            </div>
+          );
+        })}
         {logs.length===0 && <div style={{fontSize:12,color:"rgba(255,255,255,0.35)",fontFamily:"'Nunito',sans-serif",padding:"10px 0"}}>Nenhum registro ainda</div>}
       </div>
+
 
       {/* Filters */}
       <div style={{display:"flex",gap:6,padding:"8px 16px",background:"#0a0a0a",overflowX:"auto",flexShrink:0}}>
@@ -1469,6 +1501,13 @@ export default function App() {
   // eslint-disable-next-line
   }, []);
 
+  // Update online presence every 30 seconds
+  useEffect(() => {
+    updatePresence();
+    const iv = setInterval(updatePresence, 30000);
+    return () => clearInterval(iv);
+  }, []);
+
   // Dismiss splash + say welcome (needs user gesture for audio)
   const dismissSplash = () => {
     setSplash(false);
@@ -1573,18 +1612,29 @@ export default function App() {
       }}/>}
       {showAudit && <AuditPanel onClose={()=>setShowAudit(false)}/>}
 
-      {/* Audit button — bottom left, always visible after unlock */}
+      {/* Audit button — bottom RIGHT with online dot */}
       {!locked && !selfie && (
-        <div onClick={()=>setShowAudit(true)} style={{
-          position:"fixed",bottom:90,left:16,zIndex:500,
-          width:42,height:42,borderRadius:12,
-          background:"rgba(27,58,107,0.85)",
-          border:"1.5px solid rgba(255,255,255,0.2)",
+        <div onClick={()=>{ updatePresence(); setShowAudit(true); }} style={{
+          position:"fixed",bottom:90,right:16,zIndex:500,
+          width:46,height:46,borderRadius:"50%",
+          background:"linear-gradient(135deg,#1B3A6B,#0a3d62)",
+          border:"2px solid rgba(255,255,255,0.2)",
           display:"flex",alignItems:"center",justifyContent:"center",
-          fontSize:18,cursor:"pointer",
-          backdropFilter:"blur(8px)",
-          boxShadow:"0 2px 12px rgba(0,0,0,0.3)",
-        }}>📊</div>
+          fontSize:20,cursor:"pointer",
+          boxShadow:"0 3px 16px rgba(0,0,0,0.4)",
+        }}>
+          📊
+          {/* Online pulse dot */}
+          <div style={{
+            position:"absolute",top:2,right:2,
+            width:12,height:12,borderRadius:"50%",
+            background:"#00e676",
+            border:"2px solid #0a3d62",
+            boxShadow:"0 0 8px #00e676",
+            animation:"onlinePulse 2s ease-in-out infinite",
+          }}/>
+          <style>{`@keyframes onlinePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(1.3)}}`}</style>
+        </div>
       )}
 
       {!locked && selfie && <SelfieScreen onDone={(p)=>{ if(p) setSelfiePhoto(p); setSelfie(false); }}/>}
