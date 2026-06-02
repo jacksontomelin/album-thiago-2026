@@ -1698,7 +1698,7 @@ export default function App() {
       {/* Audit button — bottom RIGHT, bolinha */}
       {!locked && !selfie && (
         <div onClick={()=>{ updatePresence(); setShowAudit(true); }} style={{
-          position:"fixed",bottom:90,right:16,zIndex:500,
+          position:"fixed",bottom:145,right:16,zIndex:500,
           width:46,height:46,borderRadius:"50%",
           background:"linear-gradient(135deg,#1B3A6B,#0a3d62)",
           border:"2px solid rgba(255,255,255,0.2)",
