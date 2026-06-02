@@ -1695,18 +1695,21 @@ export default function App() {
       }}/>}
       {showAudit && <AuditPanel onClose={()=>setShowAudit(false)}/>}
 
-      {/* Audit button — bottom RIGHT with label above */}
+      {/* Audit button — bottom RIGHT, bolinha */}
       {!locked && !selfie && (
         <div onClick={()=>{ updatePresence(); setShowAudit(true); }} style={{
           position:"fixed",bottom:90,right:16,zIndex:500,
-          display:"flex",flexDirection:"column",alignItems:"center",gap:4,cursor:"pointer",
+          width:46,height:46,borderRadius:"50%",
+          background:"linear-gradient(135deg,#1B3A6B,#0a3d62)",
+          border:"2px solid rgba(255,255,255,0.2)",
+          display:"flex",alignItems:"center",justifyContent:"center",
+          fontSize:20,cursor:"pointer",
+          boxShadow:"0 3px 16px rgba(0,0,0,0.4)",
+          position:"fixed",
         }}>
-          <div style={{fontSize:10,color:"rgba(255,255,255,0.9)",fontFamily:"'Fredoka One',cursive",background:"rgba(27,58,107,0.9)",padding:"3px 10px",borderRadius:8,boxShadow:"0 2px 8px rgba(0,0,0,0.3)"}}>Auditoria</div>
-          <div style={{position:"relative",width:46,height:46,borderRadius:"50%",background:"linear-gradient(135deg,#1B3A6B,#0a3d62)",border:"2px solid rgba(255,255,255,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,boxShadow:"0 3px 16px rgba(0,0,0,0.4)"}}>
-            📊
-            <div style={{position:"absolute",top:2,right:2,width:12,height:12,borderRadius:"50%",background:"#00e676",border:"2px solid #0a3d62",boxShadow:"0 0 8px #00e676",animation:"onlinePulse 2s ease-in-out infinite"}}/>
-            <style>{`@keyframes onlinePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(1.3)}}`}</style>
-          </div>
+          📊
+          <div style={{position:"absolute",top:2,right:2,width:12,height:12,borderRadius:"50%",background:"#00e676",border:"2px solid #0a3d62",boxShadow:"0 0 8px #00e676",animation:"onlinePulse 2s ease-in-out infinite"}}/>
+          <style>{`@keyframes onlinePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(1.3)}}`}</style>
         </div>
       )}
 
