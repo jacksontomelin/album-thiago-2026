@@ -1459,7 +1459,7 @@ function FaltamTab({ collected, onToggle }) {
 export default function App() {
   const [collected, setCollected]   = useState(() => {
     // Pre-populate: all stickers collected except the ones still missing
-    const missing = new Set(["FWC3","CZE1","CZE19","CZE20","BIH2","BIH3","BIH6","BIH7","AUS3","AUS13","CIV14","TUN1","TUN8","TUN13","URU6","URU10","FRA5","FRA13","IRQ4","IRQ5","IRQ6","IRQ10","IRQ15","IRQ16","ARG12","COD1","COD19","UZB4","UZB6","UZB15","ENG20","REGU","BRON","PRAT","OURO","CC1","CC9","CC10","CC11","CC12","CC14"]);
+    const missing = new Set(["FWC3","CZE1","CZE19","CZE20","BIH2","BIH3","BIH7","AUS3","AUS13","CIV9","CIV14","NED20","JPN15","JPN20","TUN1","TUN8","TUN13","CPV20","URU6","URU8","FRA5","FRA13","IRQ4","IRQ5","IRQ6","IRQ10","IRQ15","IRQ16","ARG12","COD19","UZB4","UZB6","UZB15","ENG20","REGU","BRON","PRAT","OURO","CC1","CC9","CC11","CC12","CC14"]);
     // We build the initial state after ALL_STICKERS is defined, so use localStorage with fallback
     const saved = localStorage.getItem("thiago_collected");
     if (saved) return JSON.parse(saved);
@@ -1487,7 +1487,7 @@ export default function App() {
   // Initialize collected state — mark all as collected except missing ones
   // Runs every time to catch new stickers added (IRQ, UZB, COD, Extra, CC)
   useEffect(() => {
-    const missing = new Set(["FWC3","CZE1","CZE19","CZE20","BIH2","BIH3","BIH6","BIH7","AUS3","AUS13","CIV14","TUN1","TUN8","TUN13","URU6","URU10","FRA5","FRA13","IRQ4","IRQ5","IRQ6","IRQ10","IRQ15","IRQ16","ARG12","COD1","COD19","UZB4","UZB6","UZB15","ENG20","REGU","BRON","PRAT","OURO","CC1","CC9","CC10","CC11","CC12","CC14"]);
+    const missing = new Set(["FWC3","CZE1","CZE19","CZE20","BIH2","BIH3","BIH7","AUS3","AUS13","CIV9","CIV14","NED20","JPN15","JPN20","TUN1","TUN8","TUN13","CPV20","URU6","URU8","FRA5","FRA13","IRQ4","IRQ5","IRQ6","IRQ10","IRQ15","IRQ16","ARG12","COD19","UZB4","UZB6","UZB15","ENG20","REGU","BRON","PRAT","OURO","CC1","CC9","CC11","CC12","CC14"]);
     const saved = localStorage.getItem("thiago_collected");
     const prev = saved ? JSON.parse(saved) : {};
     // Check if any sticker from ALL_STICKERS is missing from saved state (not collected, not in missing set)
