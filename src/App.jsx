@@ -1317,12 +1317,16 @@ export default function App() {
     speak(text);
   };
 
-  // Initialize collected state on first load — mark all as collected except missing ones
+  // Initialize collected state — mark all as collected except missing ones
+  // Runs every time to catch new stickers added (IRQ, UZB, COD, Extra, CC)
   useEffect(() => {
+    const missing = new Set(["FWC3","CZE1","CZE19","CZE20","BIH2","BIH3","BIH6","BIH7","AUS3","AUS13","CIV14","TUN1","TUN8","TUN13","URU6","URU10","FRA5","FRA13","IRQ4","IRQ5","IRQ6","IRQ10","IRQ15","IRQ16","ARG12","COD1","COD19","UZB4","UZB6","UZB15","ENG20","REGU","BRON","PRAT","OURO","CC1","CC9","CC10","CC11","CC12","CC14"]);
     const saved = localStorage.getItem("thiago_collected");
-    if (!saved || Object.keys(JSON.parse(saved)).length === 0) {
-      const missing = new Set(["FWC3","CZE1","CZE19","CZE20","BIH2","BIH3","BIH6","BIH7","AUS3","AUS13","CIV14","TUN1","TUN8","TUN13","URU6","URU10","FRA5","FRA13","IRQ4","IRQ5","IRQ6","IRQ10","IRQ15","IRQ16","ARG12","COD1","COD19","UZB4","UZB6","UZB15","ENG20","REGU","BRON","PRAT","OURO","CC1","CC9","CC10","CC11","CC12","CC14"]);
-      const init = {};
+    const prev = saved ? JSON.parse(saved) : {};
+    // Check if any sticker from ALL_STICKERS is missing from saved state (not collected, not in missing set)
+    const needsUpdate = ALL_STICKERS.some(s => !missing.has(s.id) && !prev[s.id]);
+    if (needsUpdate) {
+      const init = { ...prev };
       ALL_STICKERS.forEach(s => { if (!missing.has(s.id)) init[s.id] = true; });
       setCollected(init);
       localStorage.setItem("thiago_collected", JSON.stringify(init));
