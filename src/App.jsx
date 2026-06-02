@@ -1309,6 +1309,41 @@ function TrocasTab({ trades, setTrades }) {
 }
 
 // ─── FALTAM TAB ───────────────────────────────────────────────────────────────
+
+// ─── CURIOSIDADES COPA & FUTEBOL ─────────────────────────────────────────────
+const CURIOSIDADES = [
+  "⚽ O Brasil é o único país a participar de todas as edições da Copa do Mundo!",
+  "🏆 A Copa do Mundo de 2026 será a primeira com 48 seleções — eram 32 antes!",
+  "🌎 A Copa 2026 será realizada em 3 países: EUA, Canadá e México — a primeira em 3 nações!",
+  "⭐ Pelé é o único jogador a ganhar 3 Copas do Mundo: 1958, 1962 e 1970!",
+  "🥅 O gol mais rápido de uma Copa foi marcado em 11 segundos, por Hakan Şükür (Turquia) em 2002!",
+  "👟 A bola do primeiro jogo de futebol registrado era feita de bexiga de porco!",
+  "🏟️ O Maracanã no Rio de Janeiro já recebeu mais de 200.000 torcedores num único jogo em 1950!",
+  "🌍 O futebol é o esporte mais popular do mundo — praticado em mais de 200 países!",
+  "🦁 A Inglaterra inventou o futebol moderno em 1863, com as primeiras regras escritas!",
+  "🎽 O Brasil ganhou a Copa de 1970 marcando 19 gols em apenas 6 jogos!",
+  "📏 O gol mais alto da Copa foi marcado de 57 metros — por Roberto Carlos em 1997!",
+  "🇩🇪 A Alemanha e o Brasil são os países com mais finais de Copa: 8 cada!",
+  "⚡ Cristiano Ronaldo e Lionel Messi juntos marcaram mais de 1.400 gols na carreira!",
+  "🦅 O mascote da Copa 2026 se chama Striker — um coiote que representa os 3 países sede!",
+  "🌟 Ronaldo Fenômeno marcou 8 gols na Copa de 2002 — recorde que dura até hoje!",
+  "🎯 A Copa de 1954 na Suíça teve a maior média de gols: 5,38 por jogo!",
+  "👨‍👦 Pelé jogou sua primeira Copa com apenas 17 anos — o mais jovem campeão da história!",
+  "🏅 A taça Jules Rimet era de ouro maciço e foi roubada duas vezes — no Reino Unido e no Brasil!",
+  "🌐 Mais de 5 bilhões de pessoas assistiram à Copa do Mundo de 2022 no Catar!",
+  "⚽ O futebol entrou nos Jogos Olímpicos em 1900, em Paris — a mesma cidade dos Jogos de 2024!",
+  "🦶 O chute mais forte registrado foi de Ronny Heberson em 2006: 210,8 km/h!",
+  "🇦🇷 A Argentina venceu a Copa de 2022 no Catar — foi o 3º título na história deles!",
+  "📺 A Copa do Mundo de 1966 foi a primeira transmitida ao vivo via satélite para o mundo inteiro!",
+  "🥇 O Uruguai foi campeão da primeira Copa do Mundo em 1930, jogando em casa!",
+  "🌊 O Brasil treinou para a Copa de 1970 no México ouvindo músicas para simular barulho de torcida!",
+  "🎪 A Copa de 2026 vai ter 16 sedes — 11 nos EUA, 3 no México e 2 no Canadá!",
+  "👑 Messi é o único jogador a ganhar Copa do Mundo, Champions, Bola de Ouro e Copa América!",
+  "🔢 O número 10 na camisa é o mais famoso do futebol — usado por Pelé, Maradona, Messi e Ronaldinho!",
+  "🌴 A Copa de 1994 nos EUA foi a mais assistida nos estádios: 3,5 milhões de pessoas!",
+  "⏱️ A prorrogação existe desde 1902 — quando dois times empatavam, jogavam mais 30 minutos!",
+];
+
 function FaltamTab({ collected, onToggle }) {
   const [filterCode, setFilterCode] = useState("");
   const [groupBy, setGroupBy]       = useState("team");
@@ -1399,6 +1434,10 @@ function FaltamTab({ collected, onToggle }) {
           });
           lines.push(`─────────────`);
           lines.push(`💬 Vamos trocar? 🤝`);
+          lines.push(``);
+          const curiosidade = CURIOSIDADES[Math.floor(Math.random() * CURIOSIDADES.length)];
+          lines.push(`💡 *Você sabia?*`);
+          lines.push(curiosidade);
           const txt = lines.join("\n");
           navigator.clipboard?.writeText(txt).then(()=>{
             setCopied(true); setTimeout(()=>setCopied(false), 2500);
