@@ -444,15 +444,27 @@ function speakNative(text) {
   window.speechSynthesis.speak(u);
 }
 
+// Global speak lock — prevents overlapping voices
+let speakLock = null;
+
 async function speak(text) {
   if (!speechEnabled) return;
+  // Cancel any ongoing speech
+  if (ttsAudio) { ttsAudio.pause(); ttsAudio.currentTime = 0; ttsAudio = null; }
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  // Cancel pending delayed speaks
+  if (speakLock) { clearTimeout(speakLock); speakLock = null; }
   try {
-    if (ttsAudio) { ttsAudio.pause(); ttsAudio = null; }
     const url = await fetchAudio(text);
     if (!url) { speakNative(text); return; }
     ttsAudio = new Audio(url);
     await ttsAudio.play();
   } catch { speakNative(text); }
+}
+
+function speakAfter(text, delay) {
+  if (speakLock) clearTimeout(speakLock);
+  speakLock = setTimeout(() => { speakLock = null; speak(text); }, delay);
 }
 
 if (window.speechSynthesis) {
@@ -1368,13 +1380,13 @@ export default function App() {
           if (s?.teamCode) {
             const team = ALL_TEAMS_DATA.find(t=>t.code===s.teamCode);
             if (team && team.stickers.every(st=>next[st.id])) {
-              setTimeout(()=>say(rnd(MASCOT_MSGS.teamDone(team.name)), 0.85, 1.3), 3500);
+              speakAfter(rnd(MASCOT_MSGS.teamDone(team.name)), 3500);
             }
           }
           // Check milestones
           const tot = Object.values(next).filter(Boolean).length;
-          if (tot === Math.floor(TOTAL/2)) setTimeout(()=>say(rnd(MASCOT_MSGS.milestone), 0.85, 1.3), 3500);
-          if (tot === TOTAL) setTimeout(()=>say(rnd(MASCOT_MSGS.complete), 0.8, 1.4), 2000);
+          if (tot === Math.floor(TOTAL/2)) speakAfter(rnd(MASCOT_MSGS.milestone), 3500);
+          if (tot === TOTAL) speakAfter(rnd(MASCOT_MSGS.complete), 2000);
         }, 200);
 
         setConfetti(true); setTimeout(()=>setConfetti(false),1500);
@@ -1382,7 +1394,7 @@ export default function App() {
         // A cada 3 figurinhas, fala uma curiosidade
         stickerCount++;
         if (stickerCount % 3 === 0) {
-          setTimeout(()=>say(rnd(MASCOT_MSGS.curiosity)), 4500);
+          speakAfter(rnd(MASCOT_MSGS.curiosity), 4500);
         }
       }
       return next;
