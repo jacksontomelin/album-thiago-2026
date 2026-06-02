@@ -1313,6 +1313,7 @@ function FaltamTab({ collected, onToggle }) {
   const [filterCode, setFilterCode] = useState("");
   const [groupBy, setGroupBy]       = useState("team");
   const [toast, setToast]           = useState(null);
+  const [copied, setCopied]         = useState(false);
 
   const handleMark = (s) => {
     onToggle(s.id);
@@ -1361,15 +1362,58 @@ function FaltamTab({ collected, onToggle }) {
 
   return (
     <div style={{padding:"14px 14px 0"}}>
-      <div style={{background:"linear-gradient(135deg,#D52B1E,#ff6b6b)",borderRadius:14,padding:"12px 14px",marginBottom:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <div>
-          <div style={{fontSize:22,color:"#fff",fontFamily:"'Fredoka One',cursive"}}>{missing.length} faltando</div>
-          <div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Nunito',sans-serif"}}>de {TOTAL} figurinhas no total</div>
+      <div style={{background:"linear-gradient(135deg,#D52B1E,#ff6b6b)",borderRadius:14,padding:"12px 14px",marginBottom:12}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+          <div>
+            <div style={{fontSize:22,color:"#fff",fontFamily:"'Fredoka One',cursive"}}>{missing.length} faltando</div>
+            <div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Nunito',sans-serif"}}>de {TOTAL} figurinhas no total</div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:13,color:"#FFE066",fontFamily:"'Fredoka One',cursive"}}>{TOTAL-missing.length} coladas</div>
+            <div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Nunito',sans-serif"}}>{Math.round(((TOTAL-missing.length)/TOTAL)*100)}% completo</div>
+          </div>
         </div>
-        <div style={{textAlign:"right"}}>
-          <div style={{fontSize:13,color:"#FFE066",fontFamily:"'Fredoka One',cursive"}}>{TOTAL-missing.length} coladas</div>
-          <div style={{fontSize:11,color:"rgba(255,255,255,0.8)",fontFamily:"'Nunito',sans-serif"}}>{Math.round(((TOTAL-missing.length)/TOTAL)*100)}% completo</div>
-        </div>
+        <button onClick={()=>{
+          // Build WhatsApp-style message grouped by team
+          const byTeam = {};
+          missing.forEach(s => {
+            const key = s.teamName || "Especiais";
+            if (!byTeam[key]) byTeam[key] = { flag: s.teamFlag||"⭐", stickers: [] };
+            byTeam[key].stickers.push(s.id);
+          });
+          const lines = [
+            `🏆 *Copa 2026*`,
+            ``,
+            `❌ *FIGURINHAS FALTANDO (${missing.length})*`,
+            `─────────────`,
+            ``,
+          ];
+          Object.entries(byTeam).forEach(([team, data]) => {
+            lines.push(`${data.flag} *${team}*`);
+            // Group codes in rows of 5
+            const codes = data.stickers;
+            for (let i = 0; i < codes.length; i += 5) {
+              lines.push(codes.slice(i, i+5).join(", "));
+            }
+            lines.push(``);
+          });
+          lines.push(`─────────────`);
+          lines.push(`💬 Vamos trocar? 🤝`);
+          const txt = lines.join("\n");
+          navigator.clipboard?.writeText(txt).then(()=>{
+            setCopied(true); setTimeout(()=>setCopied(false), 2500);
+          }).catch(()=>{ alert(txt); });
+        }} style={{
+          width:"100%",padding:"10px",
+          background:"rgba(255,255,255,0.18)",
+          border:"2px solid rgba(255,255,255,0.4)",
+          borderRadius:12,cursor:"pointer",
+          color:"#fff",fontSize:13,
+          fontFamily:"'Fredoka One',cursive",
+          display:"flex",alignItems:"center",justifyContent:"center",gap:8,
+        }}>
+          {copied ? "✅ Copiado! Cola no WhatsApp 📱" : "📋 Copiar lista para WhatsApp"}
+        </button>
       </div>
 
       <div style={{display:"flex",gap:8,marginBottom:10}}>
